@@ -1,4 +1,4 @@
-from typing import List, Set
+from typing import List, Set, Dict
 
 DIRECTIONS = [(1,0),(-1,0),(0,1),(0,-1),(1,1),(1,-1),(-1,-1),(-1,1)]
 BOARD_SIZE = 8
@@ -12,8 +12,10 @@ class Board:
 
     def __str__(self):
         s = []
-        for row in self.board:
-            s.append('|')
+        col_nums = list(map(str, (range(8))))
+        s.append( ' '*3 + ' '.join(col_nums) + '\n')
+        for idx, row in enumerate(self.board):
+            s.append(f'{idx} |')
             for item in row:
                 s.append(f"{item}|")
             s.append('\n')
@@ -22,6 +24,8 @@ class Board:
 
     
     def get_same_colored_piece_locations(self, x: int, y: int, color: str) -> List[tuple]:
+        """ Get the coordinates of all same-colored chips which are horizontally, vertically, or diagonally
+        can see each other (x,y)"""
 
         def _search_direction(dx, dy, opposite_pieces: list) -> None:
             # search for first occurence of same color in a specific direction
@@ -54,52 +58,30 @@ class Board:
     def update(self, x:int, y:int, color:str) -> None:
         """updates a board based on moved position"""
 
-        for dx,dy in DIRECTIONS:
+        def _normalize(diff):
+            return abs(diff)//diff if diff else 0
 
-            # search for first occurence of opposite color:
-            for i in range(1,8):
-                x_, y_ = x + i * dx, y + i * dy
-                boundary = (0 <= x_ < 8 and 0 <= y_ < 8)
-                if not boundary:
-                    break
+        piece_locs = self.get_same_colored_piece_locations(x, y, color)
+        for Px, Py in piece_locs:
+            dx = _normalize(Px - x)
+            dy = _normalize(Py - y)
+            steps = max(abs(Px-x), abs(Py-y))
 
-                cur_color = self.board[x_][y_]
-                if (cur_color == "_"):
-                    break
-                if (cur_color == color):
-                    for j in range(i):
-                        self.board[x + j * dx][y + j * dy] = color
-                    break
+            for i in range(steps):
+                self.board[x + i * dx][y + i * dy] = color
+
 
     def all_valid_moves(self, color) -> Set[tuple]:
         return {(x,y) for x in range(8) for y in range(8) if self.is_valid_move(x,y,color)}
         
     def is_valid_move(self, x:int, y:int, color: str) -> bool:
-        if self.board[x][y] != "_":
-            return False
-        for dx,dy in DIRECTIONS:
-            # search for first occurence of opposite color in each direction
-            # start at 1 because current board color is null
-            for i in range(1, 8):
-                x_, y_ = x + i * dx, y + i * dy
-                boundary = (0 <= x_ < 8 and 0 <= y_ < 8)
-                if not boundary:
-                    break
-
-                # at the start, cur_color will always be _
-                cur_color = self.board[x_][y_]
-                if (cur_color == "_"):
-                    break
-                if (cur_color == color):
-                    if i == 1:
-                        break
-                    return True
-        return False
-
+        piece_locs = self.get_same_colored_piece_locations(x, y, color)
+        return True if len(piece_locs) else False
+        
     def is_full(self) -> bool:
         return all(i in {'b', 'w'} for row in self.board for i in row)
 
-    def calculate_score(self):
+    def calculate_score(self) -> Dict[str, int]:
         d = {'b': 0, 'w': 0, '_': 0}
         for row in self.board:
             for i in row:

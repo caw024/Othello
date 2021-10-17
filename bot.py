@@ -1,24 +1,24 @@
 import random
-from board import Board
 
 class Bot:
-    def bot_turn(self, Board, color, change_fxn):
+    def __call__(self, board):
+        self.board = board
+
+    def bot_turn(self, color) -> None:
         print("\nBot Move")
-        n = self.random_move(Board, color)
+        n = self.random_move(color)
         if n is None:
+            print("No valid moves for bot")
             return None
         x,y = n
+        print(f"Moved to {n}")
+        self.board.update(x, y, color)
 
-    def all_valid_moves(self, color):
-        m = {(x,y) for x in range(8) for y in range(8) if self.is_valid_move(self.board,x,y,color)}
-        print(m)
-        return m
 
     def random_move(self, color) -> tuple:
         # maybe Optional[tuple]
-        s = list(Board.all_valid_moves(color))
+        s = list(self.board.all_valid_moves(color))
         return random.choice(s) if len(s) else None
-
 
 
 def naive_mini_max(board):
