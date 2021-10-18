@@ -1,6 +1,7 @@
-from strategy import Random
+from strategy import Random, MinMax, AlphaBetaMinMax
 
 class Bot:
+    """ Stores bot related activities """
     def __init__(self, strategy=Random):
         self.strategy = strategy()
 
@@ -8,7 +9,7 @@ class Bot:
         self.board = board
         self.strategy(self.board)
 
-    def bot_turn(self, color) -> None:
+    def bot_turn(self, color: str) -> None:
         print("Bot Move")
         print(f"All valid moves: {self.board.all_valid_moves(color)}")
 
@@ -22,4 +23,6 @@ class Bot:
 
 
 if __name__ == "__main__":
+    strategy = MinMax()
     b = Bot()
+    b(strategy)
