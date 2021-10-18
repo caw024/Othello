@@ -1,6 +1,9 @@
 from typing import List, Set, Dict
+from collections import deque
 
-DIRECTIONS = [(1,0),(-1,0),(0,1),(0,-1),(1,1),(1,-1),(-1,-1),(-1,1)]
+ADJACENT = [(1,0),(-1,0),(0,1),(0,-1)]
+DIAGONAL = [(1,1),(1,-1),(-1,-1),(-1,1)]
+DIRECTIONS = ADJACENT + DIAGONAL
 
 class Board:
     """ Board class with several methods to modify states 
@@ -15,6 +18,8 @@ class Board:
         board[mid+1][mid] = board[mid][mid+1] = 'b'
         self.board = board
 
+        self.heuristic_grid_values = self.bfs_grid_values()
+
     def __str__(self):
         s = []
         col_nums = list(map(str, (range(self.size))))
@@ -27,6 +32,31 @@ class Board:
         s.append('\n')
         return ''.join(s)
 
+    def bfs_grid_values(self) -> List[List[float]]:
+        grid_values = [[0]*self.size for _ in range(self.size)]
+        mid = (self.size - 1)//2
+        visited = set()
+        q = deque([])
+        for x,y in [(mid,mid), (mid,mid+1), (mid+1,mid), (mid+1,mid+1)]:
+            grid_values[x][y] = 1
+            visited.add((x,y))
+            q.append((x,y,1))
+
+        while q:
+            for _ in range(len(q)):
+                x,y,dist = q.popleft()
+                for dx, dy in ADJACENT:
+                    x_, y_ = x+dx, y+dy
+                    if not self.is_boundary_safe(x_,y_) or (x_, y_) in visited:
+                        continue
+                    grid_values[x_][y_] = dist
+                    visited.add((x_,y_))
+                    q.append((x_,y_,dist+0.5))
+        return grid_values
+
+
+    def is_boundary_safe(self, x, y):
+        return (0 <= x < self.size and 0 <= y < self.size)
     
     def get_same_colored_piece_locations(self, x: int, y: int, color: str) -> List[tuple]:
         """ Get the coordinates of all same-colored chips which are horizontally, vertically, or diagonally
@@ -37,8 +67,7 @@ class Board:
             # start at 1 because current board color will be null ("_")
             for i in range(1, self.size):
                 x_, y_ = x + i * dx, y + i * dy
-                boundary = (0 <= x_ < self.size and 0 <= y_ < self.size)
-                if not boundary:
+                if not self.is_boundary_safe(x_, y_):
                     return
                 cur_color = self.board[x_][y_]
                 if (cur_color == "_"):
@@ -100,11 +129,23 @@ class Board:
     def get_scores(self) -> Dict[str, int]:
         d = {'b': 0, 'w': 0, '_': 0}
         for row in self.board:
-            for i in row:
-                d[i] += 1
+            for color in row:
+                d[color] += 1
         return d
 
-    def evaluate_position(self) -> int:
+    def heuristic_scores(self) -> Dict[str, int]:
+        """ The farther a piece is from the center, the more it's worth. 
+        Score grows linearly from the center. """
+
+        grid_values = self.heuristic_grid_values
+        d = {'b': 0, 'w': 0, '_': 0}
+        for x, row in enumerate(self.board):
+            for y, color in enumerate(row):
+                d[color] += grid_values[x][y]
+        return d
+
+    def evaluate_position(self) -> float:
         """ Returns positive number if there are more black pieces than white"""
-        d = self.get_scores()
+        #d = self.get_scores()
+        d = self.heuristic_scores()
         return d['b'] - d['w']

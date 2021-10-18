@@ -22,7 +22,7 @@ class Random:
 class MinMax:
     """ Mini Max Algorithm bot. Will recursively search over game decision
     tree for best possible move, while accounting for opponent's reactions."""
-    def __init__(self, depth=6):
+    def __init__(self, depth=7):
         self.depth = depth
 
     def __call__(self, board):
@@ -31,7 +31,7 @@ class MinMax:
     def run_strategy(self, color: str) -> Tuple[int,int]:
         return self.mini_max(color, self.depth)[1]
 
-    def mini_max(self, color: str, depth: int) -> Tuple[int, Tuple[int,int]]:
+    def mini_max(self, color: str, depth: int) -> Tuple[float, Tuple[int,int]]:
         """ At black, maximize value. As white, minimize value """
         if depth == 0 or self.board.no_valid_moves(color):
             return (self.board.evaluate_position(), None)
@@ -53,7 +53,7 @@ class MinMax:
 class AlphaBetaMinMax:
     """ Utilizes Alpha Beta pruning to speed up the Min Max Algorithm.
     Takes around 8x faster to decide bot's move, and can process higher depths more quickly. """
-    def __init__(self, depth=6):
+    def __init__(self, depth=7):
         self.depth = depth
 
     def __call__(self, board):
@@ -63,7 +63,7 @@ class AlphaBetaMinMax:
         return self.ab_mini_max(color, self.depth, -inf, inf)[1]
 
     def ab_mini_max(self, color: str, depth: int, 
-                    alpha: int, beta: int) -> Tuple[int, Tuple[int,int]]:
+                    alpha: int, beta: int) -> Tuple[float, Tuple[int,int]]:
         """ At black, maximize value. As white, minimize value """
         if depth == 0 or self.board.no_valid_moves(color):
             return (self.board.evaluate_position(), None)
