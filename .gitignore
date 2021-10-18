@@ -1,0 +1,12 @@
+### Python Stuff ###
+
+__pycache__/
+.cache/
+.pytest_cache/
+*.py~
+
+### OS generated files ###
+
+.DS_Store
+.DS_Store?
+._*
