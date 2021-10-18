@@ -1,33 +1,24 @@
-import random
+from strategy import Random
 
 class Bot:
+    def __init__(self, strategy=Random):
+        self.strategy = strategy()
+
     def __call__(self, board):
         self.board = board
+        self.strategy(self.board)
 
     def bot_turn(self, color) -> None:
-        print("\nBot Move")
-        n = self.random_move(color)
+        print("Bot Move")
+        print(f"All valid moves: {self.board.all_valid_moves(color)}")
+
+        n = self.strategy.run_strategy(color)
         if n is None:
-            print("No valid moves for bot")
+            print(f"No valid moves for bot as {color}")
             return None
         x,y = n
         print(f"Moved to {n}")
         self.board.update(x, y, color)
-
-
-    def random_move(self, color) -> tuple:
-        # maybe Optional[tuple]
-        s = list(self.board.all_valid_moves(color))
-        return random.choice(s) if len(s) else None
-
-
-def naive_mini_max(board):
-    """ mini max that foreshadows next move by points """
-    pass
-
-#mini max that foreshadows next n moves
-def mini_max(board, n):
-    pass
 
 
 if __name__ == "__main__":
